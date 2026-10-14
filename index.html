@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>할 일 목록</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #fde2e4 0%, #e2ece9 50%, #dfe7fd 100%);
+      --card: rgba(255, 255, 255, 0.85);
+      --text: #4a4458;
+      --muted: #9a93a8;
+      --border: #efe4f0;
+      --accent: #b8a4e3;
+      --accent-text: #ffffff;
+      --item: #fff7f9;
+      --item-done: #f1f6f3;
+      --danger: #f4978e;
+      --shadow: 0 10px 30px rgba(184, 164, 227, 0.25);
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: linear-gradient(135deg, #2a2438 0%, #23303a 50%, #2b2a40 100%);
+      --card: rgba(40, 36, 54, 0.9);
+      --text: #ece6f5;
+      --muted: #a39cb5;
+      --border: #3d3650;
+      --accent: #c9b6f2;
+      --accent-text: #2a2438;
+      --item: #332d45;
+      --item-done: #2c3a3a;
+      --danger: #f7a8a0;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 48px 16px;
+      background: var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      transition: color 0.3s;
+    }
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    h1 { margin: 0; font-size: 1.5rem; }
+    button { font: inherit; cursor: pointer; border: none; border-radius: 12px; }
+    .theme-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      background: var(--item);
+      border: 1px solid var(--border);
+    }
+    form { display: flex; gap: 8px; }
+    input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      padding: 12px 14px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--item);
+      color: inherit;
+    }
+    input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+    .add-btn {
+      padding: 12px 18px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 600;
+    }
+    .add-btn:hover { filter: brightness(1.05); }
+    .filters { display: flex; gap: 6px; margin: 18px 0 10px; }
+    .filters button {
+      padding: 6px 14px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-radius: 999px;
+    }
+    .filters button.active { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+    ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px;
+      background: var(--item);
+      border-radius: 12px;
+    }
+    li input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+    li span { flex: 1; word-break: break-word; }
+    li.done { background: var(--item-done); }
+    li.done span { text-decoration: line-through; color: var(--muted); }
+    .del-btn { background: transparent; color: var(--muted); font-size: 1.1rem; padding: 2px 8px; }
+    .del-btn:hover { color: var(--danger); }
+    li.empty { background: transparent; color: var(--muted); justify-content: center; padding: 24px 0; }
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .clear-btn { background: transparent; color: var(--muted); }
+    .clear-btn:hover { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>할 일 목록</h1>
+      <button class="theme-btn" id="theme" title="다크 모드 전환">🌙</button>
+    </header>
+    <form id="form">
+      <input type="text" id="input" placeholder="할 일을 입력하세요" autocomplete="off" autofocus>
+      <button type="submit" class="add-btn">추가</button>
+    </form>
+
+    <div class="filters">
+      <button data-filter="all" class="active">전체</button>
+      <button data-filter="active">진행 중</button>
+      <button data-filter="done">완료</button>
+    </div>
+
+    <ul id="list"></ul>
+
+    <footer>
+      <span id="count"></span>
+      <button class="clear-btn" id="clear">완료 항목 삭제</button>
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'todos';
+    let todos = load();
+    let filter = 'all';
+
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const list = document.getElementById('list');
+    const count = document.getElementById('count');
+
+    function load() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+      } catch {}
+    }
+
+    function render() {
+      const visible = todos.filter(t =>
+        filter === 'all' ? true : filter === 'done' ? t.done : !t.done
+      );
+
+      list.innerHTML = '';
+      if (visible.length === 0) {
+        list.innerHTML = '<li class="empty">할 일이 없습니다</li>';
+      }
+
+      for (const todo of visible) {
+        const li = document.createElement('li');
+        if (todo.done) li.classList.add('done');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = todo.done;
+        checkbox.addEventListener('change', () => {
+          todo.done = checkbox.checked;
+          save();
+          render();
+        });
+
+        const text = document.createElement('span');
+        text.textContent = todo.text;
+
+        const del = document.createElement('button');
+        del.className = 'del-btn';
+        del.textContent = '×';
+        del.title = '삭제';
+        del.addEventListener('click', () => {
+          todos = todos.filter(t => t.id !== todo.id);
+          save();
+          render();
+        });
+
+        li.append(checkbox, text, del);
+        list.appendChild(li);
+      }
+
+      const remaining = todos.filter(t => !t.done).length;
+      count.textContent = `남은 할 일 ${remaining}개`;
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      todos.push({ id: Date.now(), text, done: false });
+      input.value = '';
+      save();
+      render();
+    });
+
+    document.querySelectorAll('.filters button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        filter = btn.dataset.filter;
+        document.querySelectorAll('.filters button').forEach(b => b.classList.toggle('active', b === btn));
+        render();
+      });
+    });
+
+    document.getElementById('clear').addEventListener('click', () => {
+      todos = todos.filter(t => !t.done);
+      save();
+      render();
+    });
+
+    // 다크 모드: 저장된 설정 → 없으면 시스템 설정
+    const THEME_KEY = 'theme';
+    const themeBtn = document.getElementById('theme');
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+      themeBtn.title = theme === 'dark' ? '라이트 모드 전환' : '다크 모드 전환';
+    }
+    let savedTheme = null;
+    try { savedTheme = localStorage.getItem(THEME_KEY); } catch {}
+    applyTheme(savedTheme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    themeBtn.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(THEME_KEY, next); } catch {}
+    });
+
+    render();
+  </script>
+</body>
+</html>

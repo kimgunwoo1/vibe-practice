@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가위바위보</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #fde2e4 0%, #e2ece9 50%, #dfe7fd 100%);
+      --card: rgba(255, 255, 255, 0.85);
+      --text: #4a4458;
+      --muted: #9a93a8;
+      --border: #efe4f0;
+      --accent: #b8a4e3;
+      --accent-text: #ffffff;
+      --item: #fff7f9;
+      --win: #6fbf9f;
+      --lose: #f4978e;
+      --draw: #a99bd6;
+      --shadow: 0 10px 30px rgba(184, 164, 227, 0.25);
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: linear-gradient(135deg, #2a2438 0%, #23303a 50%, #2b2a40 100%);
+      --card: rgba(40, 36, 54, 0.9);
+      --text: #ece6f5;
+      --muted: #a39cb5;
+      --border: #3d3650;
+      --accent: #c9b6f2;
+      --accent-text: #2a2438;
+      --item: #332d45;
+      --win: #8fd8b8;
+      --lose: #f7a8a0;
+      --draw: #c9b6f2;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 48px 16px;
+      background: var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    }
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    h1 { margin: 0; font-size: 1.5rem; }
+    button { font: inherit; color: inherit; cursor: pointer; border: none; border-radius: 12px; }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      background: var(--item);
+      border: 1px solid var(--border);
+    }
+
+    /* 점수판 */
+    .scoreboard {
+      background: var(--item);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+    }
+    .score-main {
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      gap: 12px;
+      font-size: 1rem;
+    }
+    .score-main strong {
+      display: inline-block;
+      font-size: 2rem;
+      min-width: 1.5em;
+    }
+    #win { color: var(--win); }
+    #lose { color: var(--lose); }
+    .score-sub { margin-top: 6px; font-size: 0.9rem; color: var(--muted); }
+    .pop { animation: pop 0.4s ease; }
+    @keyframes pop {
+      50% { transform: scale(1.4); }
+    }
+
+    /* 대결 영역 */
+    .arena {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin: 24px 0 8px;
+    }
+    .player { text-align: center; }
+    .player .label { font-size: 0.85rem; color: var(--muted); }
+    .hand {
+      font-size: 4rem;
+      line-height: 1.2;
+      height: 1.2em;
+    }
+    .vs { font-weight: 700; color: var(--muted); }
+    .shake { animation: shake 0.2s ease-in-out 3; }
+    @keyframes shake {
+      50% { transform: translateY(-14px); }
+    }
+    .result {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      min-height: 1.6em;
+      margin-bottom: 18px;
+    }
+    .result.win { color: var(--win); }
+    .result.lose { color: var(--lose); }
+    .result.draw { color: var(--draw); }
+
+    /* 선택 버튼 */
+    .choices { display: flex; gap: 8px; }
+    .choices button {
+      flex: 1;
+      min-width: 0;
+      padding: 14px 4px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: transform 0.1s, filter 0.1s;
+    }
+    .choices button span { font-size: 2rem; }
+    .choices button small { font-size: 0.75rem; opacity: 0.7; font-weight: 400; }
+    .choices button:hover:not(:disabled) { filter: brightness(1.05); transform: translateY(-2px); }
+    .choices button:disabled { opacity: 0.6; cursor: default; }
+
+    /* 최근 기록 */
+    .history { margin-top: 20px; }
+    .history .label { font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+    .history-list { display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px; }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    :root[data-theme="dark"] .badge { color: #2a2438; }
+    .badge.win { background: var(--win); }
+    .badge.lose { background: var(--lose); }
+    .badge.draw { background: var(--draw); }
+    .history .empty { font-size: 0.85rem; color: var(--muted); }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      font-size: 0.9rem;
+    }
+    .text-btn { background: transparent; color: var(--muted); padding: 6px 8px; }
+    .text-btn:hover { color: var(--text); }
+    #reset.confirm { color: var(--lose); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>가위바위보</h1>
+      <button class="icon-btn" id="theme" title="다크 모드 전환">🌙</button>
+    </header>
+
+    <section class="scoreboard">
+      <div class="score-main">
+        <span>나 <strong id="win">0</strong></span>
+        <span>:</span>
+        <span><strong id="lose">0</strong> 컴퓨터</span>
+      </div>
+      <div class="score-sub">
+        무승부 <span id="draw">0</span> · 연승 <span id="streak">0</span> · 최고 연승 <span id="best">0</span>
+      </div>
+    </section>
+
+    <section class="arena">
+      <div class="player">
+        <div class="hand" id="my-hand">❔</div>
+        <div class="label">🙂 나</div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="player">
+        <div class="hand" id="com-hand">❔</div>
+        <div class="label">🤖 컴퓨터</div>
+      </div>
+    </section>
+
+    <div class="result" id="result">아래에서 하나를 골라보세요!</div>
+
+    <div class="choices">
+      <button data-choice="scissors"><span>✌️</span>가위<small>1</small></button>
+      <button data-choice="rock"><span>✊</span>바위<small>2</small></button>
+      <button data-choice="paper"><span>✋</span>보<small>3</small></button>
+    </div>
+
+    <section class="history">
+      <div class="label">최근 10판</div>
+      <div class="history-list" id="history"></div>
+    </section>
+
+    <footer>
+      <button class="text-btn" id="sound">🔊 소리 켜짐</button>
+      <button class="text-btn" id="reset">점수 초기화</button>
+    </footer>
+  </div>
+
+  <script>
+    const CHOICES = ['scissors', 'rock', 'paper'];
+    const HANDS = { scissors: '✌️', rock: '✊', paper: '✋' };
+    // 왼쪽이 오른쪽을 이긴다
+    const BEATS = { scissors: 'paper', rock: 'scissors', paper: 'rock' };
+    const MESSAGES = { win: '이겼어요! 🎉', lose: '졌어요 😢', draw: '비겼어요 🤝' };
+    const LABELS = { win: '승', lose: '패', draw: '무' };
+
+    const STATS_KEY = 'rps-stats';
+    const SOUND_KEY = 'rps-sound';
+    const THEME_KEY = 'theme';
+
+    const $ = id => document.getElementById(id);
+    const buttons = document.querySelectorAll('.choices button');
+
+    // ---------- 점수 저장 ----------
+    function emptyStats() {
+      return { win: 0, lose: 0, draw: 0, streak: 0, bestStreak: 0, history: [] };
+    }
+
+    function load() {
+      try {
+        return { ...emptyStats(), ...JSON.parse(localStorage.getItem(STATS_KEY)) };
+      } catch {
+        return emptyStats();
+      }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+      } catch {}
+    }
+
+    let stats = load();
+
+    // ---------- 효과음 (Web Audio API) ----------
+    let soundOn = true;
+    try { soundOn = localStorage.getItem(SOUND_KEY) !== 'off'; } catch {}
+    let audioCtx = null;
+
+    function tone(freq, start, duration, type = 'sine', volume = 0.2) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const t = audioCtx.currentTime + start;
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(volume, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + duration);
+    }
+
+    function play(name) {
+      if (!soundOn) return;
+      try {
+        // 브라우저는 사용자가 클릭한 뒤에만 소리를 허용한다
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      } catch {
+        return;
+      }
+      if (name === 'click') {
+        tone(800, 0, 0.05, 'square', 0.08);
+      } else if (name === 'win') {
+        tone(523, 0, 0.15);     // 도
+        tone(659, 0.12, 0.15);  // 미
+        tone(784, 0.24, 0.3);   // 솔
+      } else if (name === 'lose') {
+        tone(392, 0, 0.2, 'triangle');
+        tone(262, 0.18, 0.4, 'triangle');
+      } else if (name === 'draw') {
+        tone(440, 0, 0.12, 'triangle');
+        tone(440, 0.16, 0.12, 'triangle');
+      }
+    }
+
+    function renderSound() {
+      $('sound').textContent = soundOn ? '🔊 소리 켜짐' : '🔇 소리 꺼짐';
+    }
+
+    $('sound').addEventListener('click', () => {
+      soundOn = !soundOn;
+      try { localStorage.setItem(SOUND_KEY, soundOn ? 'on' : 'off'); } catch {}
+      renderSound();
+      play('click');
+    });
+
+    // ---------- 화면 그리기 ----------
+    function render() {
+      $('win').textContent = stats.win;
+      $('lose').textContent = stats.lose;
+      $('draw').textContent = stats.draw;
+      $('streak').textContent = stats.streak;
+      $('best').textContent = stats.bestStreak;
+
+      const list = $('history');
+      list.innerHTML = '';
+      if (stats.history.length === 0) {
+        list.innerHTML = '<span class="empty">아직 기록이 없어요</span>';
+      }
+      for (const r of stats.history) {
+        const badge = document.createElement('span');
+        badge.className = `badge ${r}`;
+        badge.textContent = LABELS[r];
+        list.appendChild(badge);
+      }
+    }
+
+    function pop(el) {
+      el.classList.remove('pop');
+      void el.offsetWidth; // 애니메이션을 다시 시작하기 위한 트릭
+      el.classList.add('pop');
+    }
+
+    // ---------- 게임 진행 ----------
+    function judge(me, com) {
+      if (me === com) return 'draw';
+      return BEATS[me] === com ? 'win' : 'lose';
+    }
+
+    let playing = false;
+
+    function playRound(me) {
+      if (playing) return;
+      playing = true;
+      buttons.forEach(b => (b.disabled = true));
+      play('click');
+
+      const myHand = $('my-hand');
+      const comHand = $('com-hand');
+      const result = $('result');
+
+      // "가위·바위·보!" 흔들기
+      myHand.textContent = '✊';
+      comHand.textContent = '✊';
+      result.className = 'result';
+      result.textContent = '가위… 바위… 보!';
+      [myHand, comHand].forEach(el => {
+        el.classList.remove('shake');
+        void el.offsetWidth;
+        el.classList.add('shake');
+      });
+
+      setTimeout(() => {
+        const com = CHOICES[Math.floor(Math.random() * CHOICES.length)];
+        const outcome = judge(me, com);
+
+        myHand.textContent = HANDS[me];
+        comHand.textContent = HANDS[com];
+        result.className = `result ${outcome}`;
+        result.textContent = MESSAGES[outcome];
+
+        stats[outcome]++;
+        if (outcome === 'win') {
+          stats.streak++;
+          stats.bestStreak = Math.max(stats.bestStreak, stats.streak);
+        } else if (outcome === 'lose') {
+          stats.streak = 0;
+        }
+        stats.history = [outcome, ...stats.history].slice(0, 10);
+
+        save();
+        render();
+        play(outcome);
+        if (outcome === 'win') pop($('win'));
+        if (outcome === 'lose') pop($('lose'));
+
+        playing = false;
+        buttons.forEach(b => (b.disabled = false));
+      }, 600);
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => playRound(btn.dataset.choice));
+    });
+
+    document.addEventListener('keydown', e => {
+      const index = ['1', '2', '3'].indexOf(e.key);
+      if (index !== -1) playRound(CHOICES[index]);
+    });
+
+    // ---------- 점수 초기화 (두 번 눌러야 확정) ----------
+    const resetBtn = $('reset');
+    let resetTimer = null;
+
+    resetBtn.addEventListener('click', () => {
+      if (!resetBtn.classList.contains('confirm')) {
+        resetBtn.classList.add('confirm');
+        resetBtn.textContent = '정말 초기화?';
+        resetTimer = setTimeout(cancelReset, 3000);
+        return;
+      }
+      clearTimeout(resetTimer);
+      cancelReset();
+      stats = emptyStats();
+      save();
+      render();
+      $('my-hand').textContent = '❔';
+      $('com-hand').textContent = '❔';
+      $('result').className = 'result';
+      $('result').textContent = '점수를 초기화했어요';
+    });
+
+    function cancelReset() {
+      resetBtn.classList.remove('confirm');
+      resetBtn.textContent = '점수 초기화';
+    }
+
+    // ---------- 다크 모드 (할 일 목록과 설정 공유) ----------
+    const themeBtn = $('theme');
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+      themeBtn.title = theme === 'dark' ? '라이트 모드 전환' : '다크 모드 전환';
+    }
+    let savedTheme = null;
+    try { savedTheme = localStorage.getItem(THEME_KEY); } catch {}
+    applyTheme(savedTheme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    themeBtn.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(THEME_KEY, next); } catch {}
+    });
+
+    renderSound();
+    render();
+  </script>
+</body>
+</html>
