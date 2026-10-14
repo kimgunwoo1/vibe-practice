@@ -121,6 +121,22 @@
     }
     .clear-btn { background: transparent; color: var(--muted); }
     .clear-btn:hover { color: var(--danger); }
+    .page-link {
+      display: block;
+      max-width: 480px;
+      margin: 16px auto 0;
+      padding: 14px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      transition: transform 0.1s;
+    }
+    .page-link:hover { transform: translateY(-2px); }
   </style>
 </head>
 <body>
@@ -147,6 +163,8 @@
       <button class="clear-btn" id="clear">완료 항목 삭제</button>
     </footer>
   </div>
+
+  <a class="page-link" href="rps.html">🎮 가위바위보 하러 가기 →</a>
 
   <script>
     const STORAGE_KEY = 'todos';

@@ -173,6 +173,22 @@
     .text-btn { background: transparent; color: var(--muted); padding: 6px 8px; }
     .text-btn:hover { color: var(--text); }
     #reset.confirm { color: var(--lose); font-weight: 600; }
+    .page-link {
+      display: block;
+      max-width: 480px;
+      margin: 16px auto 0;
+      padding: 14px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      transition: transform 0.1s;
+    }
+    .page-link:hover { transform: translateY(-2px); }
   </style>
 </head>
 <body>
@@ -223,6 +239,8 @@
       <button class="text-btn" id="reset">점수 초기화</button>
     </footer>
   </div>
+
+  <a class="page-link" href="index.html">📝 할 일 목록으로 →</a>
 
   <script>
     const CHOICES = ['scissors', 'rock', 'paper'];
