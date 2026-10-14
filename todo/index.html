@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TODO</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #fde2e4 0%, #e2ece9 50%, #dfe7fd 100%);
+      --card: rgba(255, 255, 255, 0.85);
+      --text: #4a4458;
+      --muted: #9a93a8;
+      --border: #efe4f0;
+      --accent: #b8a4e3;
+      --accent-text: #ffffff;
+      --item: #fff7f9;
+      --item-done: #f1f6f3;
+      --danger: #f4978e;
+      --shadow: 0 10px 30px rgba(184, 164, 227, 0.25);
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: linear-gradient(135deg, #2a2438 0%, #23303a 50%, #2b2a40 100%);
+      --card: rgba(40, 36, 54, 0.9);
+      --text: #ece6f5;
+      --muted: #a39cb5;
+      --border: #3d3650;
+      --accent: #c9b6f2;
+      --accent-text: #2a2438;
+      --item: #332d45;
+      --item-done: #2c3a3a;
+      --danger: #f7a8a0;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 48px 16px;
+      background: var(--bg);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    }
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    h1 { margin: 0; font-size: 1.5rem; }
+    .today { margin: 0 0 16px; color: var(--muted); font-size: 0.9rem; }
+    button { font: inherit; cursor: pointer; border: none; border-radius: 12px; color: inherit; }
+    .theme-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      background: var(--item);
+      border: 1px solid var(--border);
+    }
+
+    /* 진행률 막대 */
+    .progress {
+      height: 8px;
+      background: var(--item);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 0.3s;
+    }
+
+    form { display: flex; flex-wrap: wrap; gap: 8px; }
+    input[type="text"], input[type="date"] {
+      padding: 12px 14px;
+      font: inherit;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--item);
+      color: inherit;
+    }
+    #input { flex: 1 1 200px; min-width: 0; }
+    #due { flex: 0 1 auto; color: var(--muted); }
+    input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+    .add-btn {
+      padding: 12px 18px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 600;
+    }
+    .add-btn:hover { filter: brightness(1.05); }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin: 18px 0 10px;
+      flex-wrap: wrap;
+    }
+    .filters { display: flex; gap: 6px; }
+    .filters button {
+      padding: 6px 12px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-radius: 999px;
+    }
+    .filters button.active { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+    .text-btn { background: transparent; color: var(--muted); font-size: 0.9rem; padding: 6px 4px; }
+    .text-btn:hover { color: var(--text); }
+
+    ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--item);
+      border-radius: 12px;
+    }
+    li input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--accent); }
+    .body { flex: 1; min-width: 0; }
+    .text { word-break: break-word; cursor: text; }
+    .meta { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+    .meta.overdue { color: var(--danger); font-weight: 600; }
+    li.done { background: var(--item-done); }
+    li.done .text { text-decoration: line-through; color: var(--muted); }
+    li.done .meta { color: var(--muted); font-weight: normal; }
+    .edit-input { width: 100%; padding: 6px 10px !important; }
+    .icon-btn { background: transparent; color: var(--muted); font-size: 1rem; padding: 2px 6px; }
+    .icon-btn:hover { color: var(--text); }
+    .del-btn:hover { color: var(--danger); }
+    li.empty { background: transparent; color: var(--muted); justify-content: center; padding: 24px 0; }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .clear-btn:hover, .clear-btn.confirm { color: var(--danger); }
+    .hint { text-align: center; color: var(--muted); font-size: 0.8rem; margin: 14px 0 0; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>📝 TODO</h1>
+      <button class="theme-btn" id="theme" title="다크 모드 전환">🌙</button>
+    </header>
+    <p class="today" id="today"></p>
+
+    <div class="progress"><div class="progress-bar" id="progress"></div></div>
+
+    <form id="form">
+      <input type="text" id="input" placeholder="할 일을 입력하세요" autocomplete="off" maxlength="200" autofocus>
+      <input type="date" id="due" title="마감일 (선택)">
+      <button type="submit" class="add-btn">추가</button>
+    </form>
+
+    <div class="toolbar">
+      <div class="filters">
+        <button data-filter="all" class="active">전체</button>
+        <button data-filter="active">진행 중</button>
+        <button data-filter="done">완료</button>
+      </div>
+      <button class="text-btn" id="toggle-all">모두 완료</button>
+    </div>
+
+    <ul id="list"></ul>
+
+    <footer>
+      <span id="count"></span>
+      <button class="text-btn clear-btn" id="clear">완료 항목 삭제</button>
+    </footer>
+
+    <p class="hint">할 일을 더블클릭하면 수정할 수 있어요</p>
+  </div>
+
+  <script>
+    // 저장 키: 같은 사이트의 다른 할 일 페이지('todos')와 데이터가 섞이지 않도록 따로 씁니다
+    const STORAGE_KEY = 'todo-app';
+    let todos = load();
+    let filter = 'all';
+    let editingId = null;
+
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const dueInput = document.getElementById('due');
+    const list = document.getElementById('list');
+    const count = document.getElementById('count');
+    const progress = document.getElementById('progress');
+    const toggleAllBtn = document.getElementById('toggle-all');
+    const clearBtn = document.getElementById('clear');
+
+    function load() {
+      try {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+      } catch {}
+    }
+
+    // 오늘 날짜를 'YYYY-MM-DD' 형식으로 (date 입력값과 비교하기 위해)
+    function todayString() {
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    // 마감일을 '오늘', '내일', 'D-3', '2일 지남' 같은 말로 바꿔 줍니다
+    function dueLabel(due) {
+      const days = Math.round((new Date(due) - new Date(todayString())) / 86400000);
+      if (days === 0) return '오늘까지';
+      if (days === 1) return '내일까지';
+      if (days > 1) return `D-${days} (${due.slice(5).replace('-', '/')})`;
+      return `${-days}일 지남`;
+    }
+
+    function render() {
+      const visible = todos.filter(t =>
+        filter === 'all' ? true : filter === 'done' ? t.done : !t.done
+      );
+
+      list.innerHTML = '';
+      if (visible.length === 0) {
+        const empty = document.createElement('li');
+        empty.className = 'empty';
+        empty.textContent = filter === 'done' ? '완료한 일이 없습니다' : '할 일이 없습니다 🎉';
+        list.appendChild(empty);
+      }
+
+      for (const todo of visible) {
+        list.appendChild(renderItem(todo));
+      }
+
+      const doneCount = todos.filter(t => t.done).length;
+      const remaining = todos.length - doneCount;
+      count.textContent = `남은 할 일 ${remaining}개 · 완료 ${doneCount}개`;
+      progress.style.width = todos.length ? `${(doneCount / todos.length) * 100}%` : '0';
+      toggleAllBtn.textContent = remaining === 0 && todos.length ? '모두 해제' : '모두 완료';
+      toggleAllBtn.hidden = todos.length === 0;
+      clearBtn.hidden = doneCount === 0;
+    }
+
+    function renderItem(todo) {
+      const li = document.createElement('li');
+      if (todo.done) li.classList.add('done');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = todo.done;
+      checkbox.addEventListener('change', () => {
+        todo.done = checkbox.checked;
+        save();
+        render();
+      });
+
+      const body = document.createElement('div');
+      body.className = 'body';
+
+      if (editingId === todo.id) {
+        body.appendChild(renderEditor(todo));
+      } else {
+        const text = document.createElement('div');
+        text.className = 'text';
+        text.textContent = todo.text;
+        text.addEventListener('dblclick', () => startEdit(todo.id));
+        body.appendChild(text);
+
+        if (todo.due) {
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          meta.textContent = '📅 ' + dueLabel(todo.due);
+          if (!todo.done && todo.due < todayString()) meta.classList.add('overdue');
+          body.appendChild(meta);
+        }
+      }
+
+      const edit = document.createElement('button');
+      edit.className = 'icon-btn';
+      edit.textContent = '✏️';
+      edit.title = '수정';
+      edit.addEventListener('click', () => startEdit(todo.id));
+
+      const del = document.createElement('button');
+      del.className = 'icon-btn del-btn';
+      del.textContent = '×';
+      del.title = '삭제';
+      del.addEventListener('click', () => {
+        todos = todos.filter(t => t.id !== todo.id);
+        save();
+        render();
+      });
+
+      li.append(checkbox, body);
+      if (editingId !== todo.id) li.append(edit);
+      li.append(del);
+      return li;
+    }
+
+    // 수정 모드: Enter 저장, Esc 취소, 다른 곳 클릭하면 저장
+    function renderEditor(todo) {
+      const field = document.createElement('input');
+      field.type = 'text';
+      field.className = 'edit-input';
+      field.value = todo.text;
+      field.maxLength = 200;
+
+      let finished = false;
+      function finish(keep) {
+        if (finished) return;
+        finished = true;
+        const text = field.value.trim();
+        if (keep && text) todo.text = text;
+        editingId = null;
+        save();
+        render();
+      }
+
+      field.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.isComposing) finish(true);
+        if (e.key === 'Escape') finish(false);
+      });
+      field.addEventListener('blur', () => finish(true));
+      requestAnimationFrame(() => { field.focus(); field.select(); });
+      return field;
+    }
+
+    function startEdit(id) {
+      editingId = id;
+      render();
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      todos.push({ id: Date.now(), text, done: false, due: dueInput.value || null });
+      input.value = '';
+      dueInput.value = '';
+      // 새 할 일이 보이도록 '완료' 필터에 있었다면 전체로 돌아갑니다
+      if (filter === 'done') setFilter('all');
+      save();
+      render();
+      input.focus();
+    });
+
+    function setFilter(next) {
+      filter = next;
+      document.querySelectorAll('.filters button').forEach(b =>
+        b.classList.toggle('active', b.dataset.filter === next)
+      );
+    }
+
+    document.querySelectorAll('.filters button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setFilter(btn.dataset.filter);
+        render();
+      });
+    });
+
+    toggleAllBtn.addEventListener('click', () => {
+      const allDone = todos.every(t => t.done);
+      todos.forEach(t => { t.done = !allDone; });
+      save();
+      render();
+    });
+
+    // 완료 항목 삭제: 실수 방지를 위해 두 번 눌러야 지워집니다 (3초 뒤 원래대로)
+    let clearTimer = null;
+    clearBtn.addEventListener('click', () => {
+      if (!clearBtn.classList.contains('confirm')) {
+        clearBtn.classList.add('confirm');
+        clearBtn.textContent = '한 번 더 누르면 삭제';
+        clearTimer = setTimeout(resetClearBtn, 3000);
+        return;
+      }
+      resetClearBtn();
+      todos = todos.filter(t => !t.done);
+      save();
+      render();
+    });
+    function resetClearBtn() {
+      clearTimeout(clearTimer);
+      clearBtn.classList.remove('confirm');
+      clearBtn.textContent = '완료 항목 삭제';
+    }
+
+    // 오늘 날짜 표시
+    document.getElementById('today').textContent = new Date().toLocaleDateString('ko-KR', {
+      year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+    });
+
+    // 다크 모드: 저장된 설정 → 없으면 시스템 설정
+    const THEME_KEY = 'theme';
+    const themeBtn = document.getElementById('theme');
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+      themeBtn.title = theme === 'dark' ? '라이트 모드 전환' : '다크 모드 전환';
+    }
+    let savedTheme = null;
+    try { savedTheme = localStorage.getItem(THEME_KEY); } catch {}
+    applyTheme(savedTheme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    themeBtn.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(THEME_KEY, next); } catch {}
+    });
+
+    render();
+  </script>
+</body>
+</html>
