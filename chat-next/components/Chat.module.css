@@ -292,6 +292,17 @@
   font-size: 0.75rem;
 }
 
+.hint p {
+  margin: 0;
+}
+
+/* 개인정보 안내는 키 안내보다 조금 더 눈에 띄게 */
+.hint .privacy {
+  margin-bottom: 2px;
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
 /* 키보드로 이동할 때만 버튼에 테두리를 보여 준다 */
 .app button:focus-visible {
   outline: 2px solid var(--accent);

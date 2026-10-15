@@ -243,7 +243,10 @@ export default function Chat() {
           </button>
         )}
       </form>
-      <p className={styles.hint}>Enter 보내기 · Shift+Enter 줄바꿈</p>
+      <div className={styles.hint}>
+        <p className={styles.privacy}>🔒 이름·주민번호·연락처·주소 등 개인정보는 입력하지 마세요.</p>
+        <p>Enter 보내기 · Shift+Enter 줄바꿈</p>
+      </div>
     </div>
   );
 }
