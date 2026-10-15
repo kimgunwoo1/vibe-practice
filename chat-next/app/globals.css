@@ -1,0 +1,66 @@
+/* 다른 페이지(index.html, rps.html, todo/)와 같은 파스텔 색상표 */
+:root {
+  --bg: linear-gradient(135deg, #fde2e4 0%, #e2ece9 50%, #dfe7fd 100%);
+  --card: rgba(255, 255, 255, 0.85);
+  --text: #4a4458;
+  --muted: #9a93a8;
+  --border: #efe4f0;
+  --accent: #b8a4e3;
+  --accent-text: #ffffff;
+  --item: #fff7f9;
+  --item-done: #f1f6f3;
+  --danger: #f4978e;
+  --shadow: 0 10px 30px rgba(184, 164, 227, 0.25);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: linear-gradient(135deg, #2a2438 0%, #23303a 50%, #2b2a40 100%);
+  --card: rgba(40, 36, 54, 0.9);
+  --text: #ece6f5;
+  --muted: #a39cb5;
+  --border: #3d3650;
+  --accent: #c9b6f2;
+  --accent-text: #2a2438;
+  --item: #332d45;
+  --item-done: #2c3a3a;
+  --danger: #f7a8a0;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 48px 16px;
+  background: var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+}
+
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 24px 16px;
+  }
+}

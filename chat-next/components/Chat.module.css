@@ -1,0 +1,177 @@
+.app {
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 96px);
+  min-height: 420px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.headerBtns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sub {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.themeBtn {
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  background: var(--item);
+  border: 1px solid var(--border);
+}
+
+.textBtn {
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 6px 4px;
+}
+
+.textBtn:hover,
+.confirm {
+  color: var(--danger);
+}
+
+/* 대화 영역: 이 부분만 스크롤된다 */
+.log {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 2px 12px;
+}
+
+.bubble {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  line-height: 1.55;
+  white-space: pre-wrap; /* 줄바꿈과 코드 들여쓰기를 그대로 보여 준다 */
+  word-break: break-word;
+}
+
+.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: var(--accent-text);
+  border-bottom-right-radius: 4px;
+}
+
+.assistant {
+  align-self: flex-start;
+  background: var(--item);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.error {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.typing {
+  color: var(--muted);
+}
+
+.empty {
+  margin: auto 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.suggestion {
+  padding: 8px 14px;
+  background: var(--item);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.suggestion:hover {
+  border-color: var(--accent);
+}
+
+.form {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--item);
+  resize: none;
+  field-sizing: content; /* 글이 길어지면 입력창도 커진다 */
+  max-height: 160px;
+}
+
+.input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.sendBtn,
+.stopBtn {
+  padding: 12px 18px;
+  font-weight: 600;
+  align-self: flex-end;
+}
+
+.sendBtn {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.sendBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.stopBtn {
+  background: var(--item);
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 480px) {
+  .app {
+    padding: 16px;
+    height: calc(100vh - 48px);
+  }
+}
