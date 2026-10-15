@@ -6,9 +6,9 @@ import { chatStore, mountedStore, themeStore } from "@/lib/store";
 import styles from "./Chat.module.css";
 
 const SUGGESTIONS = [
-  "HTML, CSS, JavaScript는 각각 무슨 일을 해?",
-  "localStorage는 어떻게 써?",
-  "Next.js는 왜 쓰는 거야?",
+  "장애인활동지원은 누가 받을 수 있어?",
+  "활동지원 서비스는 어떻게 신청해?",
+  "활동지원사가 되려면 어떻게 해야 해?",
 ];
 
 function newId() {
@@ -162,7 +162,7 @@ export default function Chat() {
           <div className={styles.empty}>
             <div className={styles.emptyAvatar} aria-hidden="true">🤖</div>
             <h2 className={styles.emptyTitle}>안녕하세요! GSC 챗봇이에요</h2>
-            <p className={styles.emptyText}>웹 개발에 대해 무엇이든 물어보세요.</p>
+            <p className={styles.emptyText}>장애인활동지원에 대해 무엇이든 물어보세요.</p>
             <div className={styles.suggestions}>
               {SUGGESTIONS.map((s) => (
                 <button key={s} className={styles.suggestion} onClick={() => send(s)}>
