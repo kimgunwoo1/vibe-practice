@@ -50,7 +50,7 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages]);
 
-  // '새 대화' 확인 상태는 3초 뒤 원래대로
+  // '기록 지우기' 확인 상태는 3초 뒤 원래대로
   useEffect(() => {
     if (!confirmReset) return;
     const timer = setTimeout(() => setConfirmReset(false), 3000);
@@ -143,7 +143,7 @@ export default function Chat() {
               className={`${styles.textBtn} ${confirmReset ? styles.confirm : ""}`}
               onClick={resetChat}
             >
-              {confirmReset ? "한 번 더 누르면 삭제" : "새 대화"}
+              {confirmReset ? "한 번 더 누르면 삭제" : "기록 지우기"}
             </button>
           )}
           <button
