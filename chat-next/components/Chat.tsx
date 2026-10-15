@@ -160,7 +160,9 @@ export default function Chat() {
       <div className={styles.log} aria-live="polite">
         {mounted && messages.length === 0 && (
           <div className={styles.empty}>
-            <p>무엇이든 물어보세요!</p>
+            <div className={styles.emptyAvatar} aria-hidden="true">🤖</div>
+            <h2 className={styles.emptyTitle}>안녕하세요! GSC 챗봇이에요</h2>
+            <p className={styles.emptyText}>웹 개발에 대해 무엇이든 물어보세요.</p>
             <div className={styles.suggestions}>
               {SUGGESTIONS.map((s) => (
                 <button key={s} className={styles.suggestion} onClick={() => send(s)}>
@@ -172,12 +174,24 @@ export default function Chat() {
         )}
 
         {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`${styles.bubble} ${m.role === "user" ? styles.user : styles.assistant} ${m.error ? styles.error : ""}`}
-          >
-            {m.text ||
-              (streaming && m.id === lastId ? <span className={styles.typing}>생각하는 중…</span> : null)}
+          <div key={m.id} className={`${styles.row} ${m.role === "user" ? styles.userRow : ""}`}>
+            {m.role === "assistant" && (
+              <div className={styles.avatar} aria-hidden="true">
+                🤖
+              </div>
+            )}
+            <div
+              className={`${styles.bubble} ${m.role === "user" ? styles.user : styles.assistant} ${m.error ? styles.error : ""}`}
+            >
+              {m.text ||
+                (streaming && m.id === lastId ? (
+                  <span className={styles.typing} aria-label="생각하는 중">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                ) : null)}
+            </div>
           </div>
         ))}
         <div ref={bottomRef} />
@@ -202,21 +216,34 @@ export default function Chat() {
               send(input);
             }
           }}
-          placeholder="메시지를 입력하세요 (Shift+Enter 줄바꿈)"
+          placeholder="메시지를 입력하세요"
           maxLength={MAX_MESSAGE_LENGTH}
           rows={1}
           autoFocus
         />
         {streaming ? (
-          <button type="button" className={styles.stopBtn} onClick={() => abortRef.current?.abort()}>
-            중지
+          <button
+            type="button"
+            className={styles.stopBtn}
+            onClick={() => abortRef.current?.abort()}
+            aria-label="중지"
+            title="중지"
+          >
+            ■
           </button>
         ) : (
-          <button type="submit" className={styles.sendBtn} disabled={!input.trim()}>
-            보내기
+          <button
+            type="submit"
+            className={styles.sendBtn}
+            disabled={!input.trim()}
+            aria-label="보내기"
+            title="보내기"
+          >
+            ↑
           </button>
         )}
       </form>
+      <p className={styles.hint}>Enter 보내기 · Shift+Enter 줄바꿈</p>
     </div>
   );
 }

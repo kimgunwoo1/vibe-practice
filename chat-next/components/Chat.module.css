@@ -1,27 +1,33 @@
 .app {
-  max-width: 640px;
+  max-width: 680px;
   margin: 0 auto;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 24px;
+  border-radius: 24px;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
   height: calc(100vh - 96px);
+  height: calc(100dvh - 96px); /* 휴대폰 주소창 높이를 빼고 계산 */
   min-height: 420px;
+  overflow: hidden;
 }
+
+/* ---------- 머리글 ---------- */
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  gap: 12px;
+  padding: 18px 24px 0;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
 }
 
 .headerBtns {
@@ -31,77 +37,166 @@
 }
 
 .sub {
-  margin: 0 0 16px;
+  margin: 2px 0 0;
+  padding: 0 24px 14px;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .themeBtn {
-  width: 40px;
-  height: 40px;
-  font-size: 1.2rem;
+  width: 38px;
+  height: 38px;
+  font-size: 1.1rem;
   background: var(--item);
   border: 1px solid var(--border);
+  transition: border-color 0.15s;
+}
+
+.themeBtn:hover {
+  border-color: var(--accent);
 }
 
 .textBtn {
+  height: 38px;
+  padding: 0 14px;
   background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
   color: var(--muted);
-  font-size: 0.9rem;
-  padding: 6px 4px;
+  font-size: 0.85rem;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
 .textBtn:hover,
 .confirm {
   color: var(--danger);
+  border-color: var(--danger);
 }
 
-/* 대화 영역: 이 부분만 스크롤된다 */
+.confirm {
+  font-weight: 600;
+}
+
+/* ---------- 대화 영역: 이 부분만 스크롤된다 ---------- */
+
 .log {
   flex: 1;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 4px 2px 12px;
+  gap: 14px;
+  padding: 20px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  animation: pop 0.2s ease-out;
+}
+
+.userRow {
+  justify-content: flex-end;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--item);
+  border: 1px solid var(--border);
+  font-size: 1rem;
 }
 
 .bubble {
-  max-width: 85%;
+  max-width: min(85%, 520px);
   padding: 10px 14px;
-  border-radius: 16px;
-  line-height: 1.55;
+  border-radius: 18px;
+  line-height: 1.6;
   white-space: pre-wrap; /* 줄바꿈과 코드 들여쓰기를 그대로 보여 준다 */
   word-break: break-word;
 }
 
 .user {
-  align-self: flex-end;
   background: var(--accent);
   color: var(--accent-text);
-  border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 6px;
 }
 
 .assistant {
-  align-self: flex-start;
   background: var(--item);
   border: 1px solid var(--border);
-  border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 6px;
 }
 
 .error {
   color: var(--danger);
   border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
-.typing {
-  color: var(--muted);
+.error::before {
+  content: "⚠️ ";
 }
+
+/* 답을 기다리는 동안 점 세 개가 통통 튄다 */
+.typing {
+  display: inline-flex;
+  gap: 4px;
+  padding: 6px 2px;
+}
+
+.typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* ---------- 첫 화면 ---------- */
 
 .empty {
   margin: auto 0;
   text-align: center;
+}
+
+.emptyAvatar {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--item);
+  border: 1px solid var(--border);
+  font-size: 2.2rem;
+  box-shadow: var(--shadow);
+}
+
+.emptyTitle {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+}
+
+.emptyText {
+  margin: 0 0 20px;
   color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .suggestions {
@@ -112,46 +207,61 @@
 }
 
 .suggestion {
-  padding: 8px 14px;
+  padding: 10px 16px;
   background: var(--item);
   border: 1px solid var(--border);
   border-radius: 999px;
   font-size: 0.9rem;
+  transition: border-color 0.15s, transform 0.15s;
 }
 
 .suggestion:hover {
   border-color: var(--accent);
+  transform: translateY(-1px);
 }
+
+/* ---------- 입력창 ---------- */
 
 .form {
   display: flex;
+  align-items: flex-end;
   gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
+  margin: 0 24px;
+  padding: 6px 6px 6px 16px;
+  background: var(--item);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+/* 입력창 안을 누르면 바깥 테두리 전체가 강조된다 */
+.form:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .input {
   flex: 1;
   min-width: 0;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--item);
+  padding: 9px 0;
+  border: none;
+  background: transparent;
+  outline: none;
   resize: none;
+  line-height: 1.5;
   field-sizing: content; /* 글이 길어지면 입력창도 커진다 */
   max-height: 160px;
 }
 
-.input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-}
-
 .sendBtn,
 .stopBtn {
-  padding: 12px 18px;
-  font-weight: 600;
-  align-self: flex-end;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: opacity 0.15s, transform 0.15s;
 }
 
 .sendBtn {
@@ -159,19 +269,87 @@
   color: var(--accent-text);
 }
 
+.sendBtn:not(:disabled):hover {
+  transform: scale(1.06);
+}
+
 .sendBtn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: default;
 }
 
 .stopBtn {
-  background: var(--item);
-  border: 1px solid var(--border);
+  background: var(--text);
+  color: var(--card);
+  font-size: 0.8rem;
+}
+
+.hint {
+  margin: 0;
+  padding: 8px 24px 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+/* 키보드로 이동할 때만 버튼에 테두리를 보여 준다 */
+.app button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+/* 움직임 줄이기를 켠 사용자에게는 애니메이션을 끈다 */
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .typing span {
+    animation: none;
+  }
 }
 
 @media (max-width: 480px) {
   .app {
-    padding: 16px;
     height: calc(100vh - 48px);
+    height: calc(100dvh - 48px);
+    border-radius: 20px;
+  }
+
+  .header,
+  .sub,
+  .log,
+  .hint {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .form {
+    margin: 0 16px;
+  }
+
+  .avatar {
+    display: none; /* 좁은 화면에서는 말풍선 폭을 넓게 쓴다 */
+  }
+
+  .bubble {
+    max-width: 90%;
   }
 }
