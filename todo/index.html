@@ -157,6 +157,29 @@
     }
     .clear-btn:hover, .clear-btn.confirm { color: var(--danger); }
     .hint { text-align: center; color: var(--muted); font-size: 0.8rem; margin: 14px 0 0; }
+
+    /* 다른 페이지로 가는 링크 카드 */
+    .page-links {
+      max-width: 520px;
+      margin: 16px auto 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .page-link {
+      display: block;
+      padding: 14px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      transition: transform 0.1s;
+    }
+    .page-link:hover { transform: translateY(-2px); }
   </style>
 </head>
 <body>
@@ -193,6 +216,11 @@
 
     <p class="hint">할 일을 더블클릭하면 수정할 수 있어요</p>
   </div>
+
+  <nav class="page-links">
+    <a class="page-link" href="../index.html">📋 할 일 목록</a>
+    <a class="page-link" href="../rps.html">🎮 가위바위보</a>
+  </nav>
 
   <script>
     // 저장 키: 같은 사이트의 다른 할 일 페이지('todos')와 데이터가 섞이지 않도록 따로 씁니다
