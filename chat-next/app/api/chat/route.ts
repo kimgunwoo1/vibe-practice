@@ -54,17 +54,15 @@ export async function POST(req: Request) {
   }
 
   const client = new Anthropic();
-  const stream = client.beta.messages.stream(
+  // Haiku 5.5는 빠르고 저렴한 모델. 거절 시 다른 모델로 넘기는 fallbacks는 지원하지 않는다
+  const stream = client.messages.stream(
     {
-      model: "claude-opus-5-5",
+      model: "claude-haiku-5-5",
       max_tokens: 64000,
       system: SYSTEM_PROMPT,
       messages,
       // 채팅은 깊게 고민할 일이 적어서 effort를 낮춰 빠르고 저렴하게 답하게 한다
       output_config: { effort: "low" },
-      // 안전 필터가 답을 거절하면 Anthropic이 추천하는 다른 모델로 자동으로 다시 시도한다
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
     },
     // 사용자가 '중지'를 누르거나 창을 닫으면 Claude 요청도 멈춘다
     { signal: req.signal },
