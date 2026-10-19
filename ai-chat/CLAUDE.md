@@ -61,8 +61,10 @@ ai-chat/
 │  └─ mask.ts                     # 개인정보 마스킹
 ├─ models/RateLimit.ts            # Mongoose 모델
 ├─ docs/                          # RAG용 공식 문서 PDF (git·Docker 이미지에서 제외, 원본은 Google Drive)
+│  └─ converted/                  # 표 쪽을 줄글로 바꾼 결과 JSON (git에 올림)
 ├─ scripts/
 │  ├─ ingest.ts                   # 문서 → 벡터 인덱스 적재 (npm run ingest)
+│  ├─ convert-tables.ts           # 표 쪽 → 줄글 (npm run convert-tables)
 │  └─ chunk.ts                    # PDF 쪽 정리와 조각 나누기
 ├─ tests/unit/                    # Vitest (vitest.config.mts)
 ├─ tests/e2e/                     # Playwright (playwright.config.ts)
@@ -105,7 +107,10 @@ ai-chat/
   - `page`는 문서에 인쇄된 쪽 번호입니다(앞부분은 로마 숫자). 못 찾으면 PDF 쪽 번호를 씁니다.
 - 파일 이름: `<activity|work>-<연도>-<문서-이름>.pdf` (`docs/README.md`). 이름에서 `domain`, `year`, `source`를 읽습니다.
 - 검색: 도구가 `domain`으로 걸러 6개를 돌려줍니다. 에이전트는 사실을 답하기 전에 반드시 검색하고, 결과에 있는 내용만 쓰고, 답변 끝에 출처(문서 이름, 쪽)를 붙입니다. 검색이 실패하면 빈 결과를 돌려주고 답변은 이어 갑니다.
-- PDF 표는 글자로 뽑으면 열이 한 칸 밀릴 수 있습니다(예: 78쪽 본인부담금 표 아래쪽은 머리글 7칸, 값 8칸). 그래서 시스템 프롬프트에서 칸 수를 세어 보고, 계산(월 한도액 × 본인부담률)으로 확인하고, 확실하지 않으면 숫자 대신 쪽 번호를 안내하게 합니다. 공개 전에는 표가 많은 쪽을 줄글로 다시 정리해 적재하는 것을 검토합니다.
+- 표 정리(`npm run convert-tables`, 로컬에서 실행): PDF 표는 글자로 뽑으면 열이 한 칸 밀립니다(예: 78쪽 본인부담금 표 아래쪽은 머리글 7칸, 값 8칸이라 15구간 금액이 14구간으로 읽힘). 그래서 표가 있는 쪽(`hasTable()`: 숫자 칸 2개 이상인 줄이 3줄 이상, 또는 【】·"구 분")을 한 쪽짜리 PDF로 잘라(`pdf-lib`) Claude(`claude-opus-5-5`, `@anthropic-ai/sdk`)에게 보내고, 칸마다 "15구간(월 한도액 1,040천원) / 기준중위소득 70% 이하: 41,600원"처럼 행·열 머리글을 붙인 줄글로 받습니다.
+  - 결과는 `docs/converted/<PDF 이름>.json`(키: PDF 쪽 번호)에 저장하고 **git에 올립니다**. `npm run ingest`는 이 파일이 있는 쪽은 뽑은 글자 대신 이 텍스트를 씁니다. 이미 바꾼 쪽은 다시 부르지 않으므로, 다시 바꾸려면 `--pages 112,113`(PDF 쪽 번호)를 줍니다. `--list`는 고른 쪽만 보여 줍니다.
+  - `@anthropic-ai/sdk`와 `pdf-lib`는 이 스크립트에만 쓰는 devDependencies입니다. 앱 런타임의 Claude 호출은 계속 Mastra로 합니다.
+  - 시스템 프롬프트의 "표 읽기" 규칙(칸 수 세기, 계산으로 확인, 애매하면 쪽 번호 안내)은 정리되지 않은 표를 위해 남겨 둡니다.
 - 근로지원 문서는 아직 없습니다. 넣기 전까지 `work` 검색은 빈 결과이므로 기관 안내로 답합니다.
 - 해마다 새 사업안내가 나오면 새 PDF를 넣고 지난 연도 파일을 지운 뒤 다시 적재합니다. 지난 연도 조각은 `source`가 달라 자동으로 지워지지 않으므로 직접 지웁니다.
 
@@ -189,6 +194,7 @@ npm run build
 npm run lint
 npm test           # Vitest
 npm run test:e2e   # Playwright (포트 3100에 개발 서버를 직접 띄움)
+npm run convert-tables  # 표 쪽 → 줄글 (docs/converted/, Claude 호출)
 npm run ingest     # docs/*.pdf → 벡터 인덱스 (--dry-run: 나누기만)
 ```
 

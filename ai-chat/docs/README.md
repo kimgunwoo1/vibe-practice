@@ -27,6 +27,10 @@ PDF는 용량이 커서 `.gitignore`로 제외합니다. 원본은 Google Drive�
 | --- | --- |
 | `activity-2026-장애인활동지원-사업안내.pdf` (489쪽) | Drive: `2026년+장애인활동지원+사업안내.pdf` |
 
+## 표 정리
+
+표가 있는 쪽은 `npm run convert-tables`로 Claude에게 줄글로 바꿔 `converted/<PDF 이름>.json`에 저장합니다. 이 JSON은 git에 올립니다. 새 PDF를 넣으면 적재 전에 먼저 실행합니다.
+
 ## 적재
 
 `npm run ingest`(`scripts/ingest.ts`)가 이 폴더의 문서를 잘게 나누고 임베딩해서 MongoDB Atlas Vector Search에 넣습니다. 자세한 내용은 `../CLAUDE.md`의 "RAG" 절을 봅니다. 목차와 전년도 비교표 쪽은 적재하지 않습니다.

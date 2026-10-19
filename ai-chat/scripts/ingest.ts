@@ -64,8 +64,18 @@ async function main() {
 
     const pdf = await getDocumentProxy(new Uint8Array(await readFile(path.join(DOCS_DIR, file))));
     const { text } = await extractText(pdf, { mergePages: false });
-    const chunks = await chunkPages(cleanPages(text), info);
-    console.log(`${file}: ${text.length}쪽 → 조각 ${chunks.length}개`);
+    // 표가 있는 쪽은 convert-tables로 줄글로 바꿔 둔 텍스트를 쓴다 (키: PDF 쪽 번호)
+    const convertedFile = path.join(DOCS_DIR, "converted", file.replace(/\.pdf$/, ".json"));
+    const converted: Record<string, { text: string }> = existsSync(convertedFile)
+      ? JSON.parse(await readFile(convertedFile, "utf8"))
+      : {};
+    const pages = cleanPages(text).map((p, i) =>
+      p.text && converted[i + 1] ? { ...p, text: converted[i + 1].text } : p,
+    );
+    const chunks = await chunkPages(pages, info);
+    console.log(
+      `${file}: ${text.length}쪽(표 정리 ${Object.keys(converted).length}쪽) → 조각 ${chunks.length}개`,
+    );
 
     if (!store) {
       for (const c of chunks.slice(0, 3)) console.log(`\n[${c.page}쪽]\n${c.text.slice(0, 300)}…`);

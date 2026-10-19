@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chunkPages, cleanPages, parseFileName } from "@/scripts/chunk";
+import { chunkPages, cleanPages, hasTable, parseFileName } from "@/scripts/chunk";
 
 describe("문서 나누기", () => {
   it("파일 이름에서 분야, 연도, 문서 이름을 읽는다", () => {
@@ -23,6 +23,14 @@ describe("문서 나누기", () => {
     const [a, b] = cleanPages([toc, comparison]);
     expect(a.text).toBe("");
     expect(b.text).toBe("");
+  });
+
+  it("숫자 칸이 많은 줄이나 표 제목이 있는 쪽을 표 쪽으로 고른다", () => {
+    const table = "70% 이하 4% - 41,600 62,300\n120% 이하 6% - 62,400 93,400\n180% 이하 8% - 83,200 124,600";
+    expect(hasTable(table)).toBe(true);
+    expect(hasTable("【본인부담금 조견표】\n설명")).toBe(true);
+    expect(hasTable("○ 6세 이상부터 65세 미만의 등록장애인\n※ 연령은 신청일 기준")).toBe(false);
+    expect(hasTable("")).toBe(false);
   });
 
   it("조각마다 출처와 쪽 번호를 붙인다", async () => {

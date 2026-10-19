@@ -46,6 +46,18 @@ export function cleanPages(pages: string[]) {
   });
 }
 
+// 숫자 칸 (예: 41,600 / 4% / 1,040천원 / 465점 / 13구간 / 빈칸 "-")
+const NUMBER_CELL = /^[(（]?-?[\d,.]+(%|원|천원|만원|점|구간|시간|분|회|일|개월|세|명)?[)）]?$|^-$/;
+
+// 표가 있는 쪽인지 대강 가린다. 숫자 칸이 2개 이상인 줄이 3줄 이상이거나, 표 제목(【】)·"구 분" 머리글이 있으면 표로 본다.
+// 이런 쪽은 글자로 뽑으면 열이 어긋나기 쉬워서 scripts/convert-tables.ts로 줄글로 바꿔 둔다.
+export function hasTable(text: string) {
+  if (!text) return false;
+  if (/【|구 ?분/.test(text)) return true;
+  const rows = text.split("\n").filter((l) => l.split(/\s+/).filter((t) => NUMBER_CELL.test(t)).length >= 2);
+  return rows.length >= 3;
+}
+
 export async function chunkPages(
   pages: { page: string; text: string }[],
   info: { domain: Domain; year: number; source: string },
