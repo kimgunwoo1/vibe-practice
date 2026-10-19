@@ -2,7 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { DOCS_INDEX, embed, getVectorStore, type ChunkMetadata } from "../rag";
 
-const TOP_K = 6;
+const TOP_K = 10;
 
 export const searchDocs = createTool({
   id: "search-docs",
