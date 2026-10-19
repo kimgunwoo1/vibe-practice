@@ -208,6 +208,21 @@ npm run ingest     # docs/*.pdf → 벡터 인덱스 (--dry-run: 나누기만)
 - Atlas 접속 허용: Cloud Run은 나가는 IP가 고정되지 않습니다. 처음에는 `0.0.0.0/0`을 허용하고 강한 DB 비밀번호를 씁니다. 운영 단계에서는 VPC 커넥터와 Cloud NAT로 고정 IP를 만들어 그 IP만 허용합니다.
 - 배포 후 `/api/health`와 대화 한 번으로 동작을 확인합니다.
 
+현재 배포 (2026-10-19 첫 배포):
+- GCP 계정 `sdakorea@sdakorea.co.kr`, 프로젝트 `ai-chat-ebmel0`, 서비스 `ai-chat`, 지역 `asia-northeast3`
+- 주소: https://ai-chat-975482170524.asia-northeast3.run.app
+- Secret Manager: `ANTHROPIC_API_KEY`, `MONGODB_URI`, `SESSION_SECRET`, `GOOGLE_GENERATIVE_AI_API_KEY` (실행 계정 `975482170524-compute@developer.gserviceaccount.com`에 읽기 권한). 값을 바꿀 때는 `gcloud secrets versions add <이름> --data-file=-`로 새 버전을 넣고 다시 배포합니다.
+- 로컬에 Docker가 없으므로 `--source .`로 Cloud Build에서 이미지를 만듭니다. 올릴 파일은 `.gcloudignore`가 정합니다(`.env*`, `docs/`, `node_modules` 제외). 다시 배포할 때는 `ai-chat/`에서 아래 명령을 그대로 실행합니다.
+
+```
+gcloud run deploy ai-chat --source . --region asia-northeast3 --allow-unauthenticated \
+  --timeout 300 --memory 1Gi --min-instances 0 --max-instances 3 \
+  --set-env-vars MONGODB_DB_NAME=ai-chat \
+  --set-secrets ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,MONGODB_URI=MONGODB_URI:latest,SESSION_SECRET=SESSION_SECRET:latest,GOOGLE_GENERATIVE_AI_API_KEY=GOOGLE_GENERATIVE_AI_API_KEY:latest
+```
+
+- 문서 적재(`npm run ingest`)는 배포와 별개입니다. 로컬에서 같은 Atlas DB에 넣으면 배포된 서비스도 바로 씁니다.
+
 ## 테스트
 
 - Vitest(`tests/unit/`): 마스킹, 입력 검증, 익명 쿠키, 대화 소유권 검사, 문서 나누기(`chunk.test.ts`). Hono 앱을 `app.request()`로 직접 부릅니다. `@/mastra`와 요청 제한은 `vi.mock`으로 바꿔 Claude와 MongoDB를 부르지 않습니다. `server-only`는 `vitest.config.mts`에서 빈 모듈로 바꿉니다.

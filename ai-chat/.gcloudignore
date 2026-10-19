@@ -1,0 +1,14 @@
+# gcloud run deploy --source . 때 Cloud Build로 올리지 않을 파일
+# (이 파일이 있으면 gcloud는 .gitignore를 자동으로 따르지 않으므로 비밀 값을 여기서도 막는다)
+.gcloudignore
+.git
+.gitignore
+.claude
+node_modules
+.next
+.env*
+!.env.example
+docs
+test-results
+playwright-report
+*.tsbuildinfo
