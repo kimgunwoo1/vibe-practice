@@ -7,3 +7,5 @@ test-results
 playwright-report
 *.md
 .git
+# RAG 원본 문서 (적재는 로컬에서 npm run ingest로 하므로 이미지에 넣지 않는다)
+docs

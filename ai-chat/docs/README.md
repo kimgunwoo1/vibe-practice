@@ -1,6 +1,6 @@
 # docs — RAG용 공식 문서
 
-상담 챗봇이 답변의 근거로 쓸 공식 문서를 넣는 곳입니다. 아직 문서는 없습니다.
+상담 챗봇이 답변의 근거로 쓸 공식 문서를 넣는 곳입니다.
 
 ## 넣을 문서
 
@@ -29,4 +29,4 @@ PDF는 용량이 커서 `.gitignore`로 제외합니다. 원본은 Google Drive�
 
 ## 적재
 
-`scripts/ingest.ts`(추후 작성)가 이 폴더의 문서를 잘게 나누고 임베딩해서 MongoDB Atlas Vector Search에 넣습니다. 자세한 순서는 `../CLAUDE.md`의 "RAG" 절을 봅니다.
+`npm run ingest`(`scripts/ingest.ts`)가 이 폴더의 문서를 잘게 나누고 임베딩해서 MongoDB Atlas Vector Search에 넣습니다. 자세한 내용은 `../CLAUDE.md`의 "RAG" 절을 봅니다. 목차와 전년도 비교표 쪽은 적재하지 않습니다.

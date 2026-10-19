@@ -26,7 +26,7 @@ export function getMastra() {
 
 export async function getCounselor() {
   // 빠진 설정은 일반 오류 대신 무엇이 빠졌는지 알려 준다
-  for (const key of ["MONGODB_URI", "ANTHROPIC_API_KEY"]) {
+  for (const key of ["MONGODB_URI", "ANTHROPIC_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY"]) {
     if (!process.env[key]) {
       throw new ApiError(500, "CONFIG", `서버 설정이 끝나지 않았습니다. (${key})`);
     }

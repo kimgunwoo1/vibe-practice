@@ -19,7 +19,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 프레임워크 | Next.js (App Router, TypeScript) — 화면과 API를 한 앱에 |
 | API | Hono — `app/api/[[...route]]/route.ts` 하나에 마운트(`hono/vercel`의 `handle`) |
 | DB | MongoDB Atlas + Mongoose |
-| AI 에이전트 | Mastra (`@mastra/core`, `@mastra/memory`, `@mastra/mongodb`) |
+| AI 에이전트 | Mastra (`@mastra/core`, `@mastra/memory`, `@mastra/mongodb`, `@mastra/rag`) |
+| 문서 검색 임베딩 | Google `gemini-embedding-001` (MongoDB Atlas Vector Search) |
 | 모델 | Claude Sonnet 5.5 (`claude-sonnet-5-5`) |
 | 스타일 | Tailwind CSS, 색은 CSS 변수(라이트/다크) |
 | 테스트 | Vitest (API·로직), Playwright (화면) |
@@ -27,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 라이브러리 API는 자주 바뀝니다. 코드를 쓰기 전에 설치된 버전의 문서를 확인합니다.
 - Next.js 16: `node_modules/next/dist/docs/` (`AGENTS.md` 참고)
-- Mastra: `node_modules/@mastra/{core,memory,mongodb}/dist/docs/` (설치 버전과 맞는 문서가 들어 있음)
+- Mastra: `node_modules/@mastra/{core,memory,mongodb,rag}/dist/docs/` (설치 버전과 맞는 문서가 들어 있음)
 - Hono, Mongoose: context7
 
 Mastra 모델은 `provider/model` 문자열로 지정합니다(`anthropic/claude-sonnet-5-5`). Mastra가 `ANTHROPIC_API_KEY`를 자동으로 읽으므로 AI SDK provider 패키지는 설치하지 않습니다.
@@ -52,14 +53,17 @@ ai-chat/
 ├─ mastra/
 │  ├─ index.ts                    # Mastra 인스턴스 (MongoDBStore, globalThis 캐시)
 │  ├─ agents/counselor.ts         # 상담 에이전트 + 시스템 프롬프트 + Memory
-│  └─ tools/                      # 에이전트 도구 (RAG 검색 등, 추후)
+│  ├─ rag.ts                      # 임베딩 모델, 벡터 저장소 (ingest 스크립트와 공용, server-only 없음)
+│  └─ tools/search-docs.ts        # 사업안내 검색 도구
 ├─ lib/
 │  ├─ api.ts                      # 브라우저에서 /api 부르는 함수 (클라이언트 전용)
 │  ├─ db.ts                       # Mongoose 연결 (globalThis 캐시)
 │  └─ mask.ts                     # 개인정보 마스킹
 ├─ models/RateLimit.ts            # Mongoose 모델
-├─ docs/                          # RAG용 공식 문서 (추후 추가)
-├─ scripts/ingest.ts              # 문서 → 벡터 인덱스 적재 (추후)
+├─ docs/                          # RAG용 공식 문서 PDF (git·Docker 이미지에서 제외, 원본은 Google Drive)
+├─ scripts/
+│  ├─ ingest.ts                   # 문서 → 벡터 인덱스 적재 (npm run ingest)
+│  └─ chunk.ts                    # PDF 쪽 정리와 조각 나누기
 ├─ tests/unit/                    # Vitest (vitest.config.mts)
 ├─ tests/e2e/                     # Playwright (playwright.config.ts)
 ├─ Dockerfile, .dockerignore
@@ -90,16 +94,20 @@ ai-chat/
 
 에이전트는 처음에는 1개로 시작합니다. 분야별 지시가 많아지면 분야별 에이전트 2개와 라우터로 나누는 것을 검토합니다.
 
-## RAG (추후 — 문서가 준비되면)
+## RAG (문서 검색)
 
-아직 문서가 없습니다. 지금은 RAG 없이 위 규칙만으로 동작합니다. 문서를 넣을 때는 다음 순서로 진행합니다.
+공식 사업안내 PDF를 조각으로 나눠 MongoDB Atlas Vector Search에 넣고, 에이전트가 `search-docs` 도구로 찾아 답합니다.
 
-1. `docs/`에 공식 문서를 넣습니다(예: 「장애인활동지원 사업안내」, 근로지원인 사업 지침). 파일 이름에 기준 연도를 붙입니다.
-2. `scripts/ingest.ts`가 문서를 잘게 나누고(`@mastra/rag`) 임베딩해 MongoDB Atlas Vector Search에 넣습니다. 각 조각에는 `{ domain: 'activity' | 'work', source, year, page }` 메타데이터를 붙입니다.
-3. 에이전트에 검색 도구를 추가합니다. 도구는 `domain`으로 결과를 걸러냅니다.
-4. 답변 끝에 출처(문서 이름, 연도, 쪽)를 표시합니다.
-
-미정: 임베딩 모델. Claude에는 임베딩 모델이 없으므로 별도 제공자를 골라야 합니다(예: Voyage AI, OpenAI, Google).
+- 임베딩: Google `gemini-embedding-001`, 768차원(`outputDimensionality`). 넣을 때는 `taskType: RETRIEVAL_DOCUMENT`, 찾을 때는 `RETRIEVAL_QUERY`. `ModelRouterEmbeddingModel.doEmbed()`를 직접 부릅니다(`ai` 패키지는 설치하지 않음).
+- 벡터 인덱스: `MongoDBVector`의 `docs` 인덱스(cosine, `filterFields: ['domain']`). 각 조각의 메타데이터는 `{ domain: 'activity' | 'work', source, year, page, text }`입니다.
+- 적재(`npm run ingest`, 로컬에서 실행): `docs/*.pdf`를 `unpdf`로 쪽마다 뽑고, 반복되는 머리글과 쪽 번호를 지운 뒤 `@mastra/rag` recursive(1,000자, 겹침 150자)로 나눕니다. 같은 문서를 다시 넣으면 그 `source`의 예전 조각을 지우고 새로 넣습니다. `--dry-run`은 API 키·DB 없이 나눈 결과만 보여 줍니다.
+  - 목차 쪽과 **전년도 비교표** 쪽은 뺍니다. 비교표는 글자로 뽑으면 두 해의 숫자가 섞여 지난해 금액을 답할 수 있습니다(같은 내용이 본문에 올해 기준으로 있음).
+  - `page`는 문서에 인쇄된 쪽 번호입니다(앞부분은 로마 숫자). 못 찾으면 PDF 쪽 번호를 씁니다.
+- 파일 이름: `<activity|work>-<연도>-<문서-이름>.pdf` (`docs/README.md`). 이름에서 `domain`, `year`, `source`를 읽습니다.
+- 검색: 도구가 `domain`으로 걸러 6개를 돌려줍니다. 에이전트는 사실을 답하기 전에 반드시 검색하고, 결과에 있는 내용만 쓰고, 답변 끝에 출처(문서 이름, 쪽)를 붙입니다. 검색이 실패하면 빈 결과를 돌려주고 답변은 이어 갑니다.
+- PDF 표는 글자로 뽑으면 열이 한 칸 밀릴 수 있습니다(예: 78쪽 본인부담금 표 아래쪽은 머리글 7칸, 값 8칸). 그래서 시스템 프롬프트에서 칸 수를 세어 보고, 계산(월 한도액 × 본인부담률)으로 확인하고, 확실하지 않으면 숫자 대신 쪽 번호를 안내하게 합니다. 공개 전에는 표가 많은 쪽을 줄글로 다시 정리해 적재하는 것을 검토합니다.
+- 근로지원 문서는 아직 없습니다. 넣기 전까지 `work` 검색은 빈 결과이므로 기관 안내로 답합니다.
+- 해마다 새 사업안내가 나오면 새 PDF를 넣고 지난 연도 파일을 지운 뒤 다시 적재합니다. 지난 연도 조각은 `source`가 달라 자동으로 지워지지 않으므로 직접 지웁니다.
 
 ## 데이터
 
@@ -167,6 +175,7 @@ ANTHROPIC_API_KEY=
 MONGODB_URI=
 MONGODB_DB_NAME=ai-chat   # Mastra와 Mongoose가 같은 DB를 씀
 SESSION_SECRET=
+GOOGLE_GENERATIVE_AI_API_KEY=   # 문서 검색 임베딩 (Gemini)
 ```
 
 `SESSION_SECRET`이 없으면 `/api/health`를 뺀 모든 API가 `CONFIG` 오류(500)를 돌려줍니다.
@@ -180,6 +189,7 @@ npm run build
 npm run lint
 npm test           # Vitest
 npm run test:e2e   # Playwright (포트 3100에 개발 서버를 직접 띄움)
+npm run ingest     # docs/*.pdf → 벡터 인덱스 (--dry-run: 나누기만)
 ```
 
 로컬 MongoDB도 쓸 수 있지만, Vector Search(RAG)는 Atlas에서만 동작하므로 개발용 Atlas 무료 클러스터를 권장합니다.
@@ -194,11 +204,11 @@ npm run test:e2e   # Playwright (포트 3100에 개발 서버를 직접 띄움)
 
 ## 테스트
 
-- Vitest(`tests/unit/`): 마스킹, 입력 검증, 익명 쿠키, 대화 소유권 검사. Hono 앱을 `app.request()`로 직접 부릅니다. `@/mastra`와 요청 제한은 `vi.mock`으로 바꿔 Claude와 MongoDB를 부르지 않습니다. `server-only`는 `vitest.config.mts`에서 빈 모듈로 바꿉니다.
+- Vitest(`tests/unit/`): 마스킹, 입력 검증, 익명 쿠키, 대화 소유권 검사, 문서 나누기(`chunk.test.ts`). Hono 앱을 `app.request()`로 직접 부릅니다. `@/mastra`와 요청 제한은 `vi.mock`으로 바꿔 Claude와 MongoDB를 부르지 않습니다. `server-only`는 `vitest.config.mts`에서 빈 모듈로 바꿉니다.
 - Playwright(`tests/e2e/`): 메시지 전송, 마크다운 표시, 대화 목록, 삭제 확인, 오류 알림, 다크 모드와 글자 크기. `/api/*`는 모두 `page.route`로 가로채므로 API 키나 DB 없이 돌아갑니다.
 - 동작이나 요소 id를 바꾸면 테스트도 함께 고칩니다.
 
 ## 미정 사항
 
-- RAG 문서와 임베딩 모델 (문서가 준비되면 결정)
+- 근로지원인 사업 지침 문서
 - Cloud Run 도메인 연결 여부

@@ -8,13 +8,15 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "ingest": "tsx scripts/ingest.ts"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.9.1",
     "@mastra/core": "^1.77.0",
     "@mastra/memory": "^1.37.1",
     "@mastra/mongodb": "^1.23.1",
+    "@mastra/rag": "^2.6.7",
     "hono": "^4.13.13",
     "mongoose": "^9.11.2",
     "next": "16.4.1",
@@ -23,6 +25,7 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "server-only": "^0.0.1",
+    "unpdf": "^1.9.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -34,6 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.5"
   }
