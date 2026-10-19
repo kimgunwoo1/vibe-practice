@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* 저장소의 다른 페이지들과 같은 파스텔 계열이지만,
+   글자와 버튼 색은 WCAG AA 대비(4.5:1 이상)를 맞추도록 더 진하게 잡았다. */
+:root {
+  --page: linear-gradient(135deg, #fde2e4 0%, #e2ece9 50%, #dfe7fd 100%);
+  --surface: #ffffff;
+  --surface-2: #f7f3fb;
+  --text: #3d3650;
+  --muted: #5f5870;
+  --border: #e4dbed;
+  --accent: #6a4fb3;
+  --accent-fg: #ffffff;
+  --user-bubble: #ede7fb;
+  --danger: #b3261e;
+  --focus: #6a4fb3;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: linear-gradient(135deg, #2a2438 0%, #23303a 50%, #2b2a40 100%);
+  --surface: #282436;
+  --surface-2: #322c44;
+  --text: #ece6f5;
+  --muted: #b4adc6;
+  --border: #443c59;
+  --accent: #c9b6f2;
+  --accent-fg: #221d30;
+  --user-bubble: #3a3252;
+  --danger: #ffb4ab;
+  --focus: #c9b6f2;
+}
+
+/* 글자 크기 키우기 (localStorage 'ai-chat-font') */
+:root[data-font="large"] {
+  font-size: 120%;
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-user-bubble: var(--user-bubble);
+  --color-danger: var(--danger);
+}
+
+body {
+  background: var(--page);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+/* 키보드 사용자를 위한 포커스 표시 */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* 답변 마크다운 */
+.prose-answer > * + * {
+  margin-top: 0.6em;
+}
+.prose-answer ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.prose-answer ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.prose-answer a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.prose-answer strong {
+  font-weight: 700;
+}
+.prose-answer h1,
+.prose-answer h2,
+.prose-answer h3 {
+  font-weight: 700;
+}
+.prose-answer table {
+  border-collapse: collapse;
+}
+.prose-answer th,
+.prose-answer td {
+  border: 1px solid var(--border);
+  padding: 0.3em 0.6em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
