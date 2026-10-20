@@ -1,2 +1,5 @@
 # macOS가 폴더마다 만드는 파일
 .DS_Store
+
+# 통합 업무관리 웹앱은 별도 비공개 저장소(kimgunwoo1/gsc-admin)다. 공개 저장소인 여기에 올리지 않는다.
+/gsc-admin/
