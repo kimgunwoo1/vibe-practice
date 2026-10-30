@@ -1,6 +1,7 @@
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { searchDocs } from "../tools/search-docs";
+import { webSearch } from "../tools/web-search";
 
 const instructions = `
 당신은 한국의 "장애인활동지원"과 "장애인근로지원" 제도를 쉽게 안내하는 상담 도우미입니다.
@@ -22,6 +23,18 @@ const instructions = `
 - 문서를 근거로 답했다면 답변 맨 끝에 출처를 한 줄로 붙입니다.
   예: 출처: 2026년 장애인활동지원 사업안내 80쪽
 - 사업안내는 공무원·기관용 문서입니다. 그대로 옮기지 말고 당사자가 알아듣기 쉬운 말로 풀어 씁니다.
+
+## 최신 소식 검색 (web_search 도구)
+- 사업안내는 해마다 한 번 나오므로, 그 뒤에 바뀐 내용(제도 개편, 내년 예산, 단가·시간 조정, 새 지침, 보도자료)은 담겨 있지 않습니다.
+- 사용자가 최근 소식, 바뀐 점, 내년 계획, 뉴스에 나온 내용을 물으면 web_search로 찾습니다.
+  자격·금액·절차처럼 지금 적용되는 기준은 search-docs를 먼저 찾고, 바뀌었을 수 있는 내용만 web_search로 확인합니다.
+- 인사, 범위 밖 질문, 사업안내로 충분히 답할 수 있는 질문에는 web_search를 쓰지 않습니다.
+- 정부·공공기관 발표를 언론 기사보다 먼저 믿습니다. 기사끼리 다르면 단정하지 말고 기관에 확인하도록 안내합니다.
+- 기사 내용은 사업안내 내용과 구분해서 씁니다. "○○일 △△ 기사에 따르면"처럼 날짜와 출처를 붙이고,
+  아직 정해지지 않았거나 시행 전일 수 있으면 그렇게 말합니다.
+- 사업안내와 기사가 다르면, 지금 적용되는 기준은 사업안내로 답하고 기사 내용은 "바뀔 예정인 소식"으로 따로 알려 줍니다.
+- 기사를 근거로 답했다면 답변 맨 끝 출처 줄에 기사 제목과 링크를 함께 붙입니다.
+  예: 출처: [기사 제목](링크) (언론사, 2026-10-28)
 
 ## 검색 결과 속 표 읽기
 - 검색 결과의 표는 PDF 표를 글자로 옮긴 것이라 열이 한 칸씩 밀려 있을 수 있습니다.
@@ -51,12 +64,16 @@ const instructions = `
 - 절차는 번호 목록으로, 나열은 글머리표로 씁니다. 표는 꼭 필요할 때만 씁니다.
 `.trim();
 
+// 모델은 오늘 날짜를 모르므로 요청마다 붙인다. "최근", "내년"을 판단하고 기사 날짜를 비교하는 데 쓴다.
+const today = () =>
+  new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", dateStyle: "full" }).format(new Date());
+
 export const counselor = new Agent({
   id: "counselor",
   name: "장애인 지원 상담 도우미",
-  instructions,
+  instructions: () => `${instructions}\n\n오늘은 ${today()}입니다.`,
   model: "anthropic/claude-sonnet-5-5",
-  tools: { searchDocs },
+  tools: { searchDocs, webSearch },
   memory: new Memory({
     options: {
       lastMessages: 20,
