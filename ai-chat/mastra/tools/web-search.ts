@@ -36,8 +36,9 @@ export const webSearch = {
   id: "anthropic.web_search_20260209",
   name: "web_search",
   args: {
-    // 질문 하나에 검색은 3번까지 (비용과 응답 시간)
-    maxUses: 3,
+    // 질문 하나에 검색은 20번까지. 3번은 금방 걸려서 늘렸다.
+    // 다 쓰면 질문 하나에 검색비만 $0.20이고 응답도 길어진다.
+    maxUses: 20,
     allowedDomains: ALLOWED_DOMAINS,
     userLocation: { type: "approximate", country: "KR", timezone: "Asia/Seoul" },
   },

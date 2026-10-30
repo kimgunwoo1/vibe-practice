@@ -122,7 +122,7 @@ ai-chat/
 사업안내는 해마다 한 번 나오므로 그 뒤의 소식은 Claude 웹 검색(`web_search_20260209`, Anthropic 서버가 검색)으로 찾습니다. 도구는 `mastra/tools/web-search.ts`입니다.
 
 - Mastra 기본 `webSearchTool`은 옛 버전(`web_search_20250305`)을 옵션 없이 붙여서 쓰지 않습니다. 대신 Mastra가 모델에 그대로 넘기는 provider-defined 도구 객체(`{ type: 'provider-defined', id: 'anthropic.web_search_20260209', name: 'web_search', args }`)를 직접 만듭니다. AI SDK provider 패키지는 설치하지 않습니다. Mastra가 베타 헤더(`code-execution-web-tools-2026-02-09`)를 알아서 붙입니다.
-- 옵션: 질문당 검색 3번(`maxUses`), 허용 사이트 목록(`allowedDomains`: 정부·공공기관, 장애·복지 전문 매체, 주요 언론사. 하위 도메인 포함, 최대 64개), 지역 한국(`userLocation`). 사이트를 늘리거나 빼려면 `ALLOWED_DOMAINS`를 고칩니다.
+- 옵션: 질문당 검색 20번(`maxUses`; 3번은 금방 걸려 2026-10-30에 늘림), 허용 사이트 목록(`allowedDomains`: 정부·공공기관, 장애·복지 전문 매체, 주요 언론사. 하위 도메인 포함, 최대 64개), 지역 한국(`userLocation`). 사이트를 늘리거나 빼려면 `ALLOWED_DOMAINS`를 고칩니다.
   - **Anthropic 수집을 막은 사이트는 넣지 않습니다.** 하나라도 있으면 Claude API가 요청 전체를 400으로 거절합니다(`The following domains are not accessible to our user agent`). 웹 검색 도구는 모든 질문에 붙으므로 인사 한마디까지 모두 실패합니다. 2026-10-30에 연합뉴스·KBS·한겨레·조선·중앙·동아가 이 이유로 빠졌습니다. 사이트를 추가한 뒤에는 배포 전에 로컬에서 질문 하나를 꼭 보내 봅니다.
 - 비용: 검색 1,000번에 $10, 그리고 읽은 검색 결과만큼 입력 토큰이 늘어납니다. Anthropic 콘솔 조직 설정에서 웹 검색이 켜져 있어야 합니다.
 - 시스템 프롬프트 규칙: 지금 적용되는 기준은 `search-docs`가 먼저입니다. 웹 검색은 최근 소식·바뀐 점·내년 계획을 물을 때만 씁니다. 기사는 날짜와 출처를 붙여 사업안내와 구분하고, 둘이 다르면 지금 기준은 사업안내로 답하고 기사는 "바뀔 예정인 소식"으로 따로 안내합니다. 출처 줄에 기사 제목과 링크를 붙입니다.
