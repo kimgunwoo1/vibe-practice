@@ -15,7 +15,7 @@ export async function getOwnedThread(memory: CounselorMemory, threadId: string, 
   return thread;
 }
 
-function textOf(message: MastraDBMessage) {
+export function textOf(message: MastraDBMessage) {
   return message.content.parts
     .flatMap((part) => (part.type === "text" ? [part.text] : []))
     .join("");

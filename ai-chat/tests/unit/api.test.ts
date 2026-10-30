@@ -11,6 +11,9 @@ const memory = {
 };
 const agent = { stream: vi.fn() };
 vi.mock("@/mastra", () => ({ getCounselor: async () => ({ agent, memory }) }));
+// 답하기 전 미리 하는 사업안내 검색도 임베딩 API·DB를 부르지 않게 한다
+vi.mock("@/mastra/tools/search-docs", () => ({ searchDocuments: async () => [] }));
+vi.mock("@/mastra/agents/query-writer", () => ({ queryWriter: { generate: async () => ({ text: "검색어" }) } }));
 
 // agent.stream()이 돌려주는 fullStream 흉내
 function fakeOutput(chunks: object[]) {
