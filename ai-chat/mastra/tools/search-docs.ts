@@ -12,7 +12,7 @@ export const searchDocs = createTool({
     query: z.string().describe("찾을 내용. 사용자의 질문을 문서에 나올 법한 말로 바꿔 쓴다."),
     domain: z
       .enum(["activity", "work"])
-      .describe("activity = 장애인활동지원, work = 장애인근로지원"),
+      .describe("activity = 장애인활동지원, work = 장애인근로지원(근로지원인 서비스, 장애인 표준사업장)"),
   }),
   execute: async ({ query, domain }) => {
     try {
