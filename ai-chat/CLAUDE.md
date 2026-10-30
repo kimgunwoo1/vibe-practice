@@ -236,6 +236,8 @@ gcloud run deploy ai-chat --source . --region asia-northeast3 --allow-unauthenti
   --set-secrets ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,MONGODB_URI=MONGODB_URI:latest,SESSION_SECRET=SESSION_SECRET:latest,GOOGLE_GENERATIVE_AI_API_KEY=GOOGLE_GENERATIVE_AI_API_KEY:latest
 ```
 
+- 배포 후에는 운영 주소로 질문을 하나 보내 답이 오는지 확인합니다. `/api/health`는 Claude를 부르지 않으므로 이것만으로는 부족합니다. 문제가 있으면 바로 이전 버전으로 되돌립니다: `gcloud run services update-traffic ai-chat --to-revisions <이전 리비전>=100 --region asia-northeast3`
+- 되돌린 뒤에는 트래픽이 그 리비전에 고정됩니다. 이 상태에서 `--source .`로 다시 배포하면 이미지는 새로 빌드되지만 새 리비전이 생기지 않거나 트래픽이 넘어가지 않을 수 있습니다(2026-10-30에 겪음). 그때는 Cloud Build 기록에서 새 이미지 digest를 찾아 `gcloud run deploy ai-chat --image <이미지>@sha256:<digest> --no-traffic --tag test`로 리비전을 만듭니다. 그다음 `https://test---ai-chat-...run.app`에서 확인하고, `update-traffic --to-revisions <새 리비전>=100 --remove-tags test`로 넘깁니다. 고정을 풀려면 `update-traffic --to-latest`를 씁니다.
 - 문서 적재(`npm run ingest`)는 배포와 별개입니다. 로컬에서 같은 Atlas DB에 넣으면 배포된 서비스도 바로 씁니다.
 
 ## 테스트
