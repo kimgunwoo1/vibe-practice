@@ -9,7 +9,17 @@ const memory = {
   updateThread: vi.fn(),
   deleteThread: vi.fn(),
 };
-vi.mock("@/mastra", () => ({ getCounselor: async () => ({ agent: {}, memory }) }));
+const agent = { stream: vi.fn() };
+vi.mock("@/mastra", () => ({ getCounselor: async () => ({ agent, memory }) }));
+
+// agent.stream()이 돌려주는 fullStream 흉내
+function fakeOutput(chunks: object[]) {
+  return {
+    fullStream: (async function* () {
+      for (const chunk of chunks) yield chunk;
+    })(),
+  };
+}
 vi.mock("@/server/middleware/rate-limit", async (orig) => ({
   ...(await orig<object>()),
   rateLimit: async (_c: unknown, next: () => Promise<void>) => next(),
@@ -79,6 +89,40 @@ describe("API", () => {
       expect(res.status).toBe(400);
       expect((await res.json()).error.code).toBe("INVALID_INPUT");
     }
+  });
+
+  it("답변 글자만 스트리밍하고 대화 ID를 헤더로 알려 준다", async () => {
+    agent.stream.mockResolvedValue(
+      fakeOutput([
+        { type: "tool-call", payload: {} },
+        { type: "text-delta", payload: { text: "주민센터" } },
+        { type: "text-delta", payload: { text: "에서 신청해요." } },
+      ]),
+    );
+    const cookie = await cookieFor();
+    const res = await app.request("/api/chat", {
+      method: "POST",
+      headers: { cookie, "Content-Type": "application/json" },
+      body: JSON.stringify({ message: "어디서 신청하나요?" }),
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-conversation-id")).toMatch(/^[0-9a-f-]{36}$/);
+    expect(await res.text()).toBe("주민센터에서 신청해요.");
+  });
+
+  it("첫 글자 전에 모델 오류가 나면 502 JSON으로 답한다", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    agent.stream.mockResolvedValue(
+      fakeOutput([{ type: "error", payload: { error: new Error("domains are not accessible") } }]),
+    );
+    const cookie = await cookieFor();
+    const res = await app.request("/api/chat", {
+      method: "POST",
+      headers: { cookie, "Content-Type": "application/json" },
+      body: JSON.stringify({ message: "안녕하세요" }),
+    });
+    expect(res.status).toBe(502);
+    expect((await res.json()).error.code).toBe("UPSTREAM");
   });
 
   it("없는 주소는 한국어 JSON 오류로 답한다", async () => {

@@ -5,7 +5,10 @@
 // 사이트·횟수를 제한하려고 Mastra가 그대로 넘기는 provider-defined 도구 모양을 직접 만든다
 // (@ai-sdk/anthropic의 anthropic.tools.webSearch_20260209()와 같은 값, 패키지 설치 없이).
 
-// 검색할 사이트. 하위 도메인도 포함된다(예: kbs.co.kr → news.kbs.co.kr). 최대 64개.
+// 검색할 사이트. 하위 도메인도 포함된다(예: sbs.co.kr → news.sbs.co.kr). 최대 64개.
+// Anthropic 수집을 막은 사이트를 하나라도 넣으면 Claude API가 요청 전체를 400으로 거절한다.
+// 그래서 모든 질문이 실패하므로 그런 사이트는 넣지 않는다.
+// (2026-10-30 확인: yna.co.kr, kbs.co.kr, hani.co.kr, chosun.com, joongang.co.kr, donga.com)
 const ALLOWED_DOMAINS = [
   // 정부·공공기관
   "mohw.go.kr", // 보건복지부
@@ -20,17 +23,11 @@ const ALLOWED_DOMAINS = [
   "beminor.com", // 비마이너
   "welfarenews.net", // 복지뉴스
   // 통신사·방송·일간지
-  "yna.co.kr",
   "newsis.com",
   "news1.kr",
-  "kbs.co.kr",
   "imbc.com",
   "sbs.co.kr",
-  "hani.co.kr",
   "khan.co.kr",
-  "chosun.com",
-  "joongang.co.kr",
-  "donga.com",
   "hankookilbo.com",
 ];
 

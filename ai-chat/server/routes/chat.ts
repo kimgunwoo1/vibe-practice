@@ -38,17 +38,36 @@ export const chat = new Hono<AppEnv>().post(
       abortSignal: c.req.raw.signal,
     });
 
-    // 응답 본문은 답변 글자만 그대로 흘려보낸다.
-    // 도중에 오류가 나면 스트림을 오류로 끝내 클라이언트가 알 수 있게 한다.
+    // 답변 글자만 뽑는다. 오류 조각은 예외로 바꾼다.
+    async function* texts() {
+      for await (const chunk of output.fullStream) {
+        if (chunk.type === "text-delta") yield chunk.payload.text;
+        else if (chunk.type === "error") throw chunk.payload.error;
+      }
+    }
+    const it = texts();
+
+    // 첫 글자가 나올 때까지 기다린 뒤에 응답을 시작한다.
+    // 그 전에 실패하면(Claude API 거절 등) 빈 스트림을 끊는 대신 한국어 오류 JSON으로 답한다.
+    // 빈 스트림을 끊으면 Cloud Run이 503 "Service Unavailable"로 바꿔 버린다.
+    let first: IteratorResult<string>;
+    try {
+      first = await it.next();
+    } catch (err) {
+      if (c.req.raw.signal.aborted) throw err;
+      console.error("[chat] model error before first text", err);
+      throw new ApiError(502, "UPSTREAM", "답변을 만들지 못했어요. 잠시 뒤에 다시 시도해 주세요.");
+    }
+
+    // 첫 글자 뒤의 오류는 스트림을 오류로 끝내 클라이언트가 알 수 있게 한다.
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
         try {
-          for await (const chunk of output.fullStream) {
-            if (chunk.type === "text-delta") {
-              controller.enqueue(encoder.encode(chunk.payload.text));
-            } else if (chunk.type === "error") {
-              throw chunk.payload.error;
+          if (!first.done) {
+            controller.enqueue(encoder.encode(first.value));
+            for await (const text of { [Symbol.asyncIterator]: () => it }) {
+              controller.enqueue(encoder.encode(text));
             }
           }
           controller.close();
